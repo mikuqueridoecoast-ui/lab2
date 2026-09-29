@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Workbook - Lab Activity 2</title>
+<style>
+  :root {
+    --paper: #fdfdf8;
+    --grid: #d3e4f4;
+    --ink: #1b2a49;
+    --muted: #55607a;
+    --mark: #fff275;
+    --pink: #e8456b;
+    --pink-dark: #c22f54;
+    --green: #2e9d6b;
+    --line: #1b2a49;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .top {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 20px 8px;
+  }
+  .top h1 {
+    margin: 0;
+    font-size: 2.4rem;
+    letter-spacing: -.5px;
+  }
+  .top h1 span { background: var(--mark); padding: 0 8px; }
+  .top p { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; }
+
+  .progress {
+    margin-top: 14px;
+    height: 14px;
+    max-width: 420px;
+    border: 2px solid var(--line);
+    background: #fff;
+  }
+  .progress div { height: 100%; width: 0; background: var(--green); transition: width .3s; }
+  .progress-label { font-family: system-ui, sans-serif; font-size: .85rem; color: var(--muted); margin-top: 4px; }
+
+  .board {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 16px 20px 48px;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* Step list */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .steps button {
+    width: 100%;
+    text-align: left;
+    font: 600 .95rem system-ui, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--line);
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .steps button:hover { background: var(--mark); }
+  .steps button[aria-current="true"] { background: var(--ink); color: #fff; }
+  .steps .tick { color: var(--green); font-weight: 700; }
+  .steps button[aria-current="true"] .tick { color: #7be0ad; }
+
+  /* Lesson */
+  .card, .lab {
+    background: #fff;
+    border: 2px solid var(--line);
+    box-shadow: 6px 6px 0 var(--line);
+    padding: 22px;
+  }
+  .card h2 { margin: 0 0 8px; font-size: 1.6rem; }
+  .card p { margin: 0 0 14px; font-size: 1.05rem; }
+  .card .why { background: var(--mark); padding: 2px 6px; }
+  pre {
+    margin: 0 0 14px;
+    padding: 14px;
+    background: #f1f5fb;
+    border: 2px dashed var(--muted);
+    overflow-x: auto;
+    font: .95rem/1.5 ui-monospace, Consolas, monospace;
+    color: var(--ink);
+  }
+  .task {
+    border-left: 6px solid var(--pink);
+    padding: 6px 12px;
+    margin: 0 0 16px;
+    font-style: italic;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; font-family: system-ui, sans-serif; }
+  button.btn {
+    font: 700 .9rem system-ui, sans-serif;
+    padding: 9px 16px;
+    border: 2px solid var(--line);
+    cursor: pointer;
+    background: #fff;
+    color: var(--ink);
+  }
+  button.btn.main { background: var(--pink); color: #fff; }
+  button.btn.main:hover { background: var(--pink-dark); }
+  button.btn:hover { background: var(--mark); }
+  button.btn.main:hover { background: var(--pink-dark); }
+  button.btn.done { background: var(--green); color: #fff; }
+  button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+
+  /* Compiler */
+  .lab { padding: 14px; position: sticky; top: 16px; }
+  .lab h3 { margin: 0 0 8px; font: 700 1rem system-ui, sans-serif; }
+  .lab iframe { width: 100%; height: 540px; border: 2px solid var(--line); background: #fff; }
+  #status { min-height: 1.4em; font: .85rem system-ui, sans-serif; color: var(--muted); margin-top: 8px; }
+
+  @media (max-width: 1000px) {
+    .board { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .lab { position: static; }
+    .lab iframe { height: 440px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Java <span>Workbook</span></h1>
+  <p>Lab Activity 2 &mdash; pick a step, read it, run the code, then mark it done.</p>
+  <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+  <div class="progress-label" id="plabel">0 of 12 steps done</div>
+</div>
+
+<div class="board">
+  <nav aria-label="Steps"><ul class="steps" id="steps"></ul></nav>
+
+  <article class="card" id="card" aria-live="polite"></article>
+
+  <aside class="lab" aria-label="Online Java compiler">
+    <h3>Java compiler</h3>
+    <iframe
+      id="compiler"
+      title="Online Java compiler"
+      src="https://onecompiler.com/embed/java?listenToEvents=true&hideTitle=true&hideNew=true&hideNewFileOption=true&hideLanguageSelection=true&hideStdin=true"
+      loading="lazy"></iframe>
+    <div id="status" role="status" aria-live="polite"></div>
+  </aside>
+</div>
+
+<script>
+const lessons = [
+  { title: 'Say hello', text: 'System.out.println() shows text on the screen. Every Java program lives inside a class with a main method.', code: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n        System.out.println("I am learning Java!");\n    }\n}',
+    task: 'Change the message so it says your own name.' },
+  { title: 'Variables', text: 'A variable stores a value. In Java you must say its type first: String, int, double or boolean.', code: 'public class Main {\n    public static void main(String[] args) {\n        String name = "Ana";\n        int age = 18;\n        double height = 1.62;\n        boolean isStudent = true;\n\n        System.out.println(name + " is " + age);\n        System.out.println("Height: " + height);\n        System.out.println("Student: " + isStudent);\n    }\n}',
+    task: 'Add a String variable called city and print it.' },
+  { title: 'Math', text: 'Use + - * / for math. % gives the remainder. Dividing two ints gives a whole number.', code: 'public class Main {\n    public static void main(String[] args) {\n        int a = 12;\n        int b = 5;\n\n        System.out.println("Add: " + (a + b));\n        System.out.println("Subtract: " + (a - b));\n        System.out.println("Multiply: " + (a * b));\n        System.out.println("Divide: " + (a / b));\n        System.out.println("Exact divide: " + ((double) a / b));\n        System.out.println("Remainder: " + (a % b));\n    }\n}',
+    task: 'Change a and b, then run it again.' },
+  { title: 'Strings', text: 'A String holds text. Strings come with helpful methods you call with a dot.', code: 'public class Main {\n    public static void main(String[] args) {\n        String word = "Java";\n\n        System.out.println("Length: " + word.length());\n        System.out.println("Upper: " + word.toUpperCase());\n        System.out.println("Lower: " + word.toLowerCase());\n        System.out.println("First letter: " + word.charAt(0));\n        System.out.println("Has av? " + word.contains("av"));\n        System.out.println(word + " is fun!");\n    }\n}',
+    task: 'Try it with your own name instead of Java.' },
+  { title: 'if / else', text: 'if runs code only when a condition is true. Put the code inside curly braces.', code: 'public class Main {\n    public static void main(String[] args) {\n        int score = 82;\n\n        if (score >= 90) {\n            System.out.println("Grade: A");\n        } else if (score >= 75) {\n            System.out.println("Grade: B");\n        } else {\n            System.out.println("Keep practicing!");\n        }\n    }\n}',
+    task: 'Set score to 95, then to 40. What changes?' },
+  { title: 'switch', text: 'switch picks one path from many choices. break stops it from running into the next case.', code: 'public class Main {\n    public static void main(String[] args) {\n        int day = 3;\n        String name;\n\n        switch (day) {\n            case 1:\n                name = "Monday";\n                break;\n            case 2:\n                name = "Tuesday";\n                break;\n            case 3:\n                name = "Wednesday";\n                break;\n            default:\n                name = "Another day";\n        }\n\n        System.out.println("Day " + day + " is " + name);\n    }\n}',
+    task: 'Add a case for day 4 (Thursday).' },
+  { title: 'for loops', text: 'A for loop repeats code. It has a start, a stop condition and a step.', code: 'public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 5; i++) {\n            System.out.println("Number " + i);\n        }\n\n        int total = 0;\n        for (int i = 1; i <= 10; i++) {\n            total += i;\n        }\n        System.out.println("Sum of 1 to 10: " + total);\n    }\n}',
+    task: 'Make the first loop count up to 10.' },
+  { title: 'while loops', text: 'A while loop keeps going as long as its condition is true. Make sure something changes inside it, or it never stops.', code: 'public class Main {\n    public static void main(String[] args) {\n        int count = 1;\n\n        while (count <= 5) {\n            System.out.println("Count: " + count);\n            count++;\n        }\n\n        int n = 100;\n        while (n > 10) {\n            n = n / 2;\n        }\n        System.out.println("n ended at " + n);\n    }\n}',
+    task: 'Change the loop to count down from 5 to 1.' },
+  { title: 'Arrays', text: 'An array stores many values of the same type. Positions start at 0.', code: 'public class Main {\n    public static void main(String[] args) {\n        int[] scores = {90, 85, 72, 100};\n\n        System.out.println("First: " + scores[0]);\n        System.out.println("How many: " + scores.length);\n\n        int sum = 0;\n        for (int score : scores) {\n            sum += score;\n        }\n        System.out.println("Average: " + (double) sum / scores.length);\n    }\n}',
+    task: 'Add a fifth score and check the average.' },
+  { title: 'Methods', text: 'A method is a reusable block of code. Give it a return type, a name and parameters, then call it by name.', code: 'public class Main {\n    static String greet(String name) {\n        return "Hello, " + name + "!";\n    }\n\n    static int square(int n) {\n        return n * n;\n    }\n\n    public static void main(String[] args) {\n        System.out.println(greet("Maria"));\n        System.out.println(square(7));\n    }\n}',
+    task: 'Write a method called twice that returns n * 2.' },
+  { title: 'Classes and objects', text: 'A class is a blueprint. An object is one thing made from it. This is the heart of Java.', code: 'class Student {\n    String name;\n    int grade;\n\n    Student(String name, int grade) {\n        this.name = name;\n        this.grade = grade;\n    }\n\n    void introduce() {\n        System.out.println("Hi, I am " + name + " from grade " + grade);\n    }\n}\n\npublic class Main {\n    public static void main(String[] args) {\n        Student s1 = new Student("Ana", 11);\n        Student s2 = new Student("Ben", 12);\n        s1.introduce();\n        s2.introduce();\n    }\n}',
+    task: 'Create a third student with your own name.' },
+  { title: 'ArrayList', text: 'An ArrayList is a list that can grow and shrink, unlike a plain array.', code: 'import java.util.ArrayList;\n\npublic class Main {\n    public static void main(String[] args) {\n        ArrayList<String> pets = new ArrayList<>();\n\n        pets.add("cat");\n        pets.add("dog");\n        pets.add("fish");\n        pets.remove("dog");\n\n        System.out.println("Pets: " + pets);\n        System.out.println("Count: " + pets.size());\n\n        for (String pet : pets) {\n            System.out.println("I have a " + pet);\n        }\n    }\n}',
+    task: 'Add another pet and remove a different one.' }
+];
+
+const done = new Set();
+let current = 0;
+const iframe = document.getElementById('compiler');
+const statusEl = document.getElementById('status');
+const stepsEl = document.getElementById('steps');
+const cardEl = document.getElementById('card');
+
+function renderSteps() {
+  stepsEl.innerHTML = '';
+  lessons.forEach((l, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    if (i === current) b.setAttribute('aria-current', 'true');
+    const label = document.createElement('span');
+    label.textContent = (i + 1) + '. ' + l.title;
+    const tick = document.createElement('span');
+    tick.className = 'tick';
+    tick.textContent = done.has(i) ? '✔' : '';
+    b.append(label, tick);
+    b.onclick = () => { current = i; render(); };
+    li.appendChild(b);
+    stepsEl.appendChild(li);
+  });
+}
+
+function renderCard() {
+  const l = lessons[current];
+  cardEl.innerHTML = '';
+  const h = document.createElement('h2'); h.textContent = 'Step ' + (current + 1) + ': ' + l.title;
+  const p = document.createElement('p'); p.textContent = l.text;
+  const pre = document.createElement('pre'); const c = document.createElement('code'); c.textContent = l.code; pre.appendChild(c);
+  const t = document.createElement('p'); t.className = 'task'; t.textContent = 'Your turn: ' + l.task;
+
+  const row = document.createElement('div'); row.className = 'row';
+  const load = mk('Send to compiler', 'btn main', () => loadCode(l));
+  const copy = mk('Copy code', 'btn', () => copyCode(l.code));
+  const dn = mk(done.has(current) ? 'Done ✔' : 'Mark as done', 'btn' + (done.has(current) ? ' done' : ''), () => {
+    if (done.has(current)) done.delete(current); else done.add(current);
+    render();
+  });
+  const prev = mk('Back', 'btn', () => { current = Math.max(0, current - 1); render(); });
+  const next = mk('Next', 'btn', () => { current = Math.min(lessons.length - 1, current + 1); render(); });
+  row.append(load, copy, dn, prev, next);
+  cardEl.append(h, p, pre, t, row);
+}
+
+function mk(text, cls, fn) {
+  const b = document.createElement('button');
+  b.className = cls; b.textContent = text; b.onclick = fn;
+  return b;
+}
+
+function renderProgress() {
+  document.getElementById('bar').style.width = (done.size / lessons.length * 100) + '%';
+  document.getElementById('plabel').textContent = done.size + ' of ' + lessons.length + ' steps done';
+}
+
+function render() { renderSteps(); renderCard(); renderProgress(); }
+
+function loadCode(l) {
+  iframe.contentWindow.postMessage({
+    eventType: 'populateCode',
+    language: 'java',
+    files: [{ name: 'Main.java', content: l.code }]
+  }, '*');
+  statusEl.textContent = 'Sent step ' + (current + 1) + ' to the compiler. If nothing changed, use Copy code and paste it in.';
+}
+
+async function copyCode(code) {
+  try { await navigator.clipboard.writeText(code); statusEl.textContent = 'Copied. Paste it into the compiler.'; }
+  catch (e) { statusEl.textContent = 'Could not copy automatically. Select the code and copy it.'; }
+}
+
+render();
+</script>
+</body>
+</html>
